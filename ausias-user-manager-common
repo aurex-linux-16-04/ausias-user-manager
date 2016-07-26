@@ -22,10 +22,11 @@ get_from_db(){
 [ $(id -u) -eq 0 ] || die "You must be root to run this script"
 
 # check configuration files
-for f in /etc/smbldap-tools/smbldap_bind.conf  /etc/smbldap-tools/smbldap.conf; do
-        [ -r "$f" ] || die "Missing configuration file $f"
-        . $f
-done
+#for f in /etc/smbldap-tools/smbldap_bind.conf  /etc/smbldap-tools/smbldap.conf; do
+#        [ -r "$f" ] || die "Missing configuration file $f"
+#        . $f
+#done
+
 [ -r /root/.my.cnf ] || die "Missing mysql configurarion in /root/.my.cnf"
 export HOME=/root
 

@@ -1,0 +1,16 @@
+Installation and usage
+======================
+
+Environment
+-----------
+
+These scripts require the presence of ".my.cnf" file in root's home directory to access mySQL as root.
+the format of the file is:
+
+[client]
+user=root
+password=PUT_HERE_YOUR_MYSQL_PASSWORD
+
+
+(set permissions with chmod 600 /root/.my.cnf)
+
