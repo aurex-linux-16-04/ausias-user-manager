@@ -1,0 +1,10 @@
+# configuration variables for samba4u
+
+S4_BASE_DN="dc=ausias,dc=lan"
+S4_USER_DN="cn=Users,$S4_BASE_DN"
+S4_MKPASSWD="/home/depinf/user-import/samba-reborn/scripts/samba4u-mkpasswd"
+
+STUDENTS_CSV="/home/depinf/user-import/alumnos-20-10-2016.csv"
+TEACHERS_CSV="/home/depinf/user-import/profes-2017.csv"
+PASSWD_LOG="/home/depinf/user-import/gen_passwd.log"
+

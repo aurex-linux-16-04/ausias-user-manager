@@ -30,4 +30,6 @@ get_from_db(){
 [ -r /root/.my.cnf ] || die "Missing mysql configurarion in /root/.my.cnf"
 export HOME=/root
 
+[ -r ./itaca-user-import.cfg ] || die "Missing itaca-user-import.cfg in current directory"
+. itaca-user-import.cfg
 
