@@ -4,33 +4,34 @@
 . ./itaca-user-import-common
 
 ldap2xml() {
-	SED_RULE="/^$/d;/^dn:/s%^.*$%\n<alumno%;"
+        SED_RULE='/^[^:]\+:[[:blank:]]/!d'
+        SED_RULE="$SED_RULE;/^dn:/s%^.*$%\n<alumno%;"
 
-	ATTRIB_LIST="uid uidNumber employeeNumber sambaSID gidNumber sambaPrimaryGroupSID gecos"
-	for f in $ATTRIB_LIST ; do
-		case "$f" in
-			uid)
-				F="login"
-				;;
-			gecos) 
-        	                F="nombre_comp"
-                	        ;;
+        ATTRIB_LIST="uid uidNumber employeeNumber objectSid gidNumber primaryGroupID gecos"
+        for f in $ATTRIB_LIST ; do
+                case "$f" in
+                        uid)
+                                F="login"
+                                ;;
+                        gecos) 
+                                F="nombre_comp"
+                                ;;
 
-			*)
-				F="$f"
-				;;
-		esac
-		SED_RULE="${SED_RULE}/^$f:/{s%^$f: % $F=\"%;s%\$%\"%};"
+                        *)
+                                F="$f"
+                                ;;
+                esac
+                SED_RULE="${SED_RULE}/^$f:/{s%^$f: % $F=\"%;s%\$%\"%};"
 
-	done
+        done
 
-	SED_RULE="${SED_RULE}/^[[:blank:]]*login=/{p;s%login%DNI_NORM%;s%=\".\(.*$\)%=\"\U\1%;/=\".[A-Z]/s%=\"\(.\)\(.\)%=\"\2\1%}"
-	ALU_GID="$(getent group ALUMNOS  |cut -f 3 -d :)"
-	# get ldif
-	#TMP_FILE="$(tempfile)"
-	ldapsearch -LLL -x -b "dc=centro,dc=com" -D "$masterDN" -w "$masterPw" "(&(objectClass=posixAccount)(gidnumber=$ALU_GID))" $ATTRIB_LIST | sed -e "$SED_RULE" |sed '1d;/^$/s%^%/>%;$a/>'
+        SED_RULE="${SED_RULE}/^[[:blank:]]*login=/{p;s%login%DNI_NORM%;s%=\".\(.*$\)%=\"\U\1%;/=\".[A-Z]/s%=\"\(.\)\(.\)%=\"\2\1%}"
+        ALU_GID="$(getent group ALUMNOS  |cut -f 3 -d :)"
+        # get ldif
+        #TMP_FILE="$(tempfile)"
+        ldbsearch -H "/var/lib/samba/private/sam.ldb" -b $S4_USER_DN "(&(objectClass=posixAccount)(gidnumber=$ALU_GID))" $ATTRIB_LIST | sed -e "$SED_RULE" |sed '1d;/^$/s%^%/>%;$a/>'
 }
- 
+  
 
 # more checks
 
