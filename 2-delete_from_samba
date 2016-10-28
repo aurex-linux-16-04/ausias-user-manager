@@ -1,7 +1,7 @@
 #!/bin/sh
 # source common files and do basic checkings
 
-. ./ausias-user-manager-common
+. ./itaca-user-import-common
 
 ldap2xml() {
 	SED_RULE="/^$/d;/^dn:/s%^.*$%\n<alumno%;"
@@ -34,10 +34,10 @@ ldap2xml() {
 
 # more checks
 
-user_confirmation "This script deletes from ldap server all users tagged as 'deleted' ('borrado = 1') in mySQL itaca.alumnos table"
+user_confirmation "This script deletes from samba4 server all users tagged as 'deleted' ('borrado = 1') in mySQL itaca.alumnos table"
 
 #Paso 2 
-# extraer en una tabla a los alumnos existentes en el LDAP (login con formato a[[:digit:]]+).Tabla ldap_tmp
+# extraer en una tabla a los alumnos existentes en el samba (login con formato a[[:digit:]]+).Tabla ldap_tmp
 # buscar por login todos los alumnos de la tabla ldap_tmp que no existan en la tabla de alumnos
 # añadirlos y marcarlos como manuales (alumnos.manual="1")
 # el campo DNI_NORM se construye a partir del campo login de la tabla ldap

@@ -3,7 +3,7 @@
 
 # source common files and do basic checkings
 
-. ./ausias-user-manager-common
+. ./itaca-user-import-common
 
 # common funcs
 usage(){
