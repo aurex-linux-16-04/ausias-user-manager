@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./ausias-user-manager-common
+. ./itaca-user-import-common
 
 die() {
 	echo "$1" >&2
@@ -27,7 +27,7 @@ gen_login(){
 }
 
 
-user_confirmation "This script adds to ldap server all users tagged as 'new' ('alta = 1') in mySQL itaca.alumnos table"
+user_confirmation "This script adds to samba 4 server all users tagged as 'new' ('alta = 1') in mySQL itaca.alumnos table"
  
 TMP_FILE="$(tempfile)"
 TMP_FILE2="$(tempfile)"
@@ -41,7 +41,7 @@ TMP_FILE4="$(tempfile)"
 
 mysql -N -B -e "use itaca; update alumnos set manual='0' where manual='1' and DNI_NORM in (select dniok from itaca_temp);"
 
-# rescatar alumnos borrados (desmarcar el boradlo)
+# rescatar alumnos borrados (desmarcar el borrado)
 
 mysql -N -B -e "use itaca; update alumnos set borrado='0',alta='1' where borrado<>'0' and DNI_NORM in (select dniok from itaca_temp);"
 
@@ -93,6 +93,11 @@ cat "$TMP_FILE" |while read l; do
 #             may be an awfull bug ???? (report to sto ;-) )
 		gecos="$ape_clean  $nom_clean"
 		echo "Adding user: $gecos"
+
+# TODO: extract and adapt s4user_add function from ~/user-import/samba-reborn/scripts/samba4u-tool 
+
+
+
 #		smbldap-useradd -a -g ALUMNOS -d "/datos/usuarios/alumnos/$login" -D "S:" -G "Domain Users" -o "ou=usuarios,dc=centro,dc=com" -c "$gecos"  || true
 		rc=0
 		echo "$initpass" |smbldap-useradd -a -g ALUMNOS -d "/datos/usuarios/alumnos/${login}" -D "S:" -G "Domain Users" -c "$gecos" -S "$ape_clean" -N "$nom_clean" -Z employeeNumber=$employee,shadowMax=-1 -P  -p "${login}" || rc=$?
