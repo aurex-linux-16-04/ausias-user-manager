@@ -16,7 +16,12 @@ ldap2xml() {
                         gecos) 
                                 F="nombre_comp"
                                 ;;
-
+			objectSid)
+				F="sambaSID"
+				;;
+			primaryGroupID)
+				F="sambaPrimaryGroupSID"
+				;;
                         *)
                                 F="$f"
                                 ;;
