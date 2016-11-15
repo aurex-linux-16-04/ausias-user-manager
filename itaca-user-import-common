@@ -33,3 +33,104 @@ export HOME=/root
 [ -r ./itaca-user-import.cfg ] || die "Missing itaca-user-import.cfg in current directory"
 . itaca-user-import.cfg
 
+
+
+
+# Sorry, bash required in order to use $RANDOM ...
+
+s4user_add (){
+	user_name="$1"
+	given_name="$2"
+	sn="$3"
+	gecos="$4"
+	#[ "$gecos" ] || gecos="$given_name  $sn"
+	mail_address="$5"
+	home_drive="$6"
+	uidNumber="$7"
+	gidNumber="$8"
+	homeDirectory="$9"
+	shift
+	employeeNumber="$9"
+	shift
+	PASSWORD="$9"
+
+	case "$gidNumber" in
+		501)
+			#TEACHERS_ID="501"
+			scriptPath="profesores.vbs"
+			;;
+		502)
+			#STUDENTS_ID="502"
+			scriptPath="alumnos.vbs"
+			;;
+		503)
+			#SECRETAR_ID="503"
+			scriptPath="secretaria.vbs"
+			;;
+		504)	#CONSERJE_ID="504"
+			scriptPath="consergeria.vbs"
+			;;
+		*)
+			scriptPath="other.vbs"
+			;;
+	esac			
+
+	MAIL_OPTION=""
+	if [ "$mail_address" ] ; then
+		MAIL_OPTION="--mail-address=$mail_address"
+	fi
+	rc=0
+	#samba-tool user add "$user_name" --random-password --given-name="$given_name" $MAIL_OPTION --home-drive="$home_drive" 2> /dev/null || rc=$?
+	#samba-tool user add "$user_name" --random-password $MAIL_OPTION --home-drive="$home_drive" 2> /dev/null || rc=$?
+	#samba-tool user add "$user_name" --use-username-as-cn --random-password $MAIL_OPTION --home-drive="$home_drive" --home-directory="\\\estaminas\\$user_name" --given-name="$given_name" --surname="$sn" --unix-home="$homeDirectory" --login-shell="/bin/bash" --uid-number="$uidNumber" --gid-number="$gidNumber" --gecos="$gecos" --uid="$user_name" 2> /dev/null || rc=$?
+
+	samba-tool user add "$user_name" --use-username-as-cn --random-password $MAIL_OPTION --home-drive="$home_drive" --home-directory="$homeDirectory" --given-name="$given_name" --surname="$sn" --unix-home="$homeDirectory" --login-shell="/bin/bash" --uid-number="$uidNumber" --gid-number="$gidNumber" --gecos="$gecos" --uid="$user_name" --script-path="$scriptPath" 2> /dev/null || rc=$?
+	tmpfile="$(tempfile)"
+	if [ $rc -eq 0 ] ; then
+		# PASSWORD is now a parameter
+		#PASSWORD="$(user_getpass "$user_name" "$gidNumber")"
+		samba-tool user setpassword "$user_name" --newpassword=$PASSWORD || true
+		if [ "$employeeNumber" ] ; then
+			cat << EOF > $tmpfile
+dn: cn=$user_name,$S4_USER_DN
+changetype: modify
+-
+add:employeeNumber
+employeeNumber: $employeeNumber
+EOF
+			ldbmodify --url=/var/lib/samba/private/sam.ldb -b $S4_BASE_DN $tmpfile >/dev/null || rc=2
+			rm -f "$tmpfile"
+		fi
+		
+	elif [ $rc -ne 255 ] ; then
+		return 1
+	fi
+	rc=0
+	cat << EOF > $tmpfile
+dn: cn=$user_name,$S4_USER_DN
+changetype: modify
+-
+replace:homeDirectory
+homeDirectory: $homeDirectory
+-
+replace:scriptPath
+scriptPath: $scriptPath
+EOF
+	ldbmodify --url=/var/lib/samba/private/sam.ldb -b $S4_BASE_DN $tmpfile >/dev/null || rc=2
+	rm -f "$tmpfile"
+
+	samba-tool user setexpiry "$user_name" --noexpiry || rc=2
+	[ $rc -eq 0 ] || return $rc
+
+#	# copiamos password del ldap viejo
+#	ntpasswd="$(user_get_attr "$user_name" "sambaNTPassword")"
+#	
+#	cat << EOF > $tmpfile
+#dn: cn=$user_name,$S4_USER_DN
+#changetype: modify
+#replace: unicodePwd
+#unicodePwd:: $($S4_MKPASSWD $ntpasswd) 
+#EOF
+#	ldbmodify --url=/var/lib/samba/private/sam.ldb --controls=local_oid:1.3.6.1.4.1.7165.4.3.12:0 -b $S4_BASE_DN $tmpfile >/dev/null || rc=3
+	return $rc
+}

@@ -95,14 +95,25 @@ cat "$TMP_FILE" |while read l; do
 		echo "Adding user: $gecos"
 
 # TODO: extract and adapt s4user_add function from ~/user-import/samba-reborn/scripts/samba4u-tool 
+	# s4user_add parameters:
+	#$1 user_name AKA $login
+	#$2 given_name AKA $nom_clean
+        #$3 sn AKA $ape_clean
+        #$4 gecos AKA $gekos
+        #$5 mail_address => SEARCH IN DATABASE
+        #$6 home_drive => Fix as "S:"
+        #$7 uidNumber => Design a store and increment method .....
+	#$8 gidNumber => Fix as 502???
+        #$9 homeDirectory AKA "/datos/usuarios/alumnos/$login"
+        #$10 employeeNumber AKA $employee
+	#$11 PASSWORD AKA initpass
+
+	rc=0
+	s4user_add "$login" "$nom_clean" "$ape_clean" "$gekos" "" "S:" "uid" "502" "/datos/usuarios/alumnos/$login" "$employee" "$initpass" || rc =$?
 
 
-
-#		smbldap-useradd -a -g ALUMNOS -d "/datos/usuarios/alumnos/$login" -D "S:" -G "Domain Users" -o "ou=usuarios,dc=centro,dc=com" -c "$gecos"  || true
-		rc=0
-		echo "$initpass" |smbldap-useradd -a -g ALUMNOS -d "/datos/usuarios/alumnos/${login}" -D "S:" -G "Domain Users" -c "$gecos" -S "$ape_clean" -N "$nom_clean" -Z employeeNumber=$employee,shadowMax=-1 -P  -p "${login}" || rc=$?
 		
-		if [ $rc -eq 0 ] || ldapsearch -LLL -x -b "dc=centro,dc=com" -D "$masterDN" -w "$masterPw" "(&(objectClass=posixAccount)(uid=${login}))" |grep -q "${login}" ; then
+		if [ $rc -eq 0 ] ; then
 			echo "Correcto"
 			echo ${login} >> "$TMP_FILE2"
 		else
